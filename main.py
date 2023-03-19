@@ -1,3 +1,4 @@
+import random
 # Kruskal's algorithm in Python
 
 # Most of the code is taken from https://www.programiz.com/dsa/kruskal-algorithm
@@ -72,19 +73,61 @@ class Kruskal:
 
         return resultGraph
 
+def createFileFromGraph(name, graph: Graph): 
+    fp = open(name, 'w')
+    for edge in graph._graph:  
+        fp.write("{{{}, {}, {}}},\n".format(edge[0], edge[1], edge[2]))
+    # deleting the two last char
+    fp.seek(0,2)
+    size=fp.tell()
+    fp.truncate(size-3)
+    fp.close()
 
-g = Graph(6)
+def createRandomGraph(nVertices, nEdges, maxWeight): 
+    # make sure nEdges is reasonable
+    maxNEdges = nVertices*(nVertices - 1)/2
+    if nEdges > maxNEdges: 
+        return None
 
-g.add_edge([0, 1, 4])
-g.add_edge([0, 2, 4])
-g.add_edge([1, 2, 2])
-g.add_edge([2, 3, 3])
-g.add_edge([2, 5, 2])
-g.add_edge([2, 4, 4])
-g.add_edge([3, 4, 3])
-g.add_edge([5, 4, 3])
+    # make a connected non-complete graph with nVertices-1 edges 
+    newGraph = []
+    
+    for v in range(nVertices):  
+        if (v > 0): 
+            newGraph.append([v, random.randrange(v)])
+
+    # Make random connections until there is nEdges
+    maxNTries = 100
+    nTries = 0
+    while(len(newGraph) < nEdges): 
+        u = random.randrange(nVertices)
+        v = random.randrange(nVertices)
+
+        if u == v: 
+            nTries += 1
+            continue 
+        if [u, v] in newGraph or [v, u] in newGraph: 
+            nTries += 1
+            continue
+        if nTries >= maxNTries: 
+            return None # failed to create graph 
+
+        newGraph.append([u, v])
+
+    #creating Graph instance 
+    g = Graph(nVertices)
+    g._number_of_edges = nEdges 
+
+    for edge in newGraph: 
+        edge.append(random.randrange(maxWeight) + 1)
+        g._graph.append(edge)
+
+    return g
+
+g = createRandomGraph(5, 9, 10)
+createFileFromGraph("graph.data", g)
 
 algo = Kruskal() 
 newG = algo.run(g)
 
-print(newG._graph)
+createFileFromGraph("mst.data", newG)
