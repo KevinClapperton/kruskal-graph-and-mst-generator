@@ -1,7 +1,15 @@
 import random
+import time
+import math
 # Kruskal's algorithm in Python
 
 # Most of the code is taken from https://www.programiz.com/dsa/kruskal-algorithm
+
+NUMBER_OF_VERTICES = 500
+NUMBER_OF_EDGES = 50000
+MAX_WEIGHT = 10000
+
+NUMBER_OF_TRIES = 100
 
 class Graph:
     def __init__(self, vertices):
@@ -45,12 +53,68 @@ class Kruskal:
             parent[yroot] = xroot
             rank[xroot] += 1
 
+    def partition(self, graph, beg, end): 
+        p=beg
+        pivot=graph[end][2] # getting last weight as pivot
+        for i in range(beg, end):
+            if graph[i][2]<=pivot:
+                graph._graph[i], graph._graph[p] = graph._graph[p], graph._graph[i]
+                p += 1
+        graph._graph[end], graph._graph[p] = graph._graph[p], graph._graph[end]
+        return p
+
+    def quicksort(self, graph, beg, end): 
+        # Code adapted from https://stackoverflow.com/a/68553264/10919275
+        # Create an auxiliary stack
+        size = end - beg + 1
+        stack = [0] * (size)
+    
+        # initialize top of stack
+        top = -1
+    
+        # push initial values of beg and end to stack
+        top = top + 1
+        stack[top] = beg
+        top = top + 1
+        stack[top] = end
+    
+        # Keep popping from stack while is not empty
+        while top >= 0:
+    
+            # Pop end and beg
+            end = stack[top]
+            top = top - 1
+            beg = stack[top]
+            top = top - 1
+    
+            # Set pivot element at its correct position in
+            # sorted array
+            p = self.partition( graph, beg, end )
+    
+            # If there are elements on right side of pivot,
+            # then push right side to stack
+            if p+1 < end:
+                top = top + 1
+                stack[top] = p + 1
+                top = top + 1
+                stack[top] = end
+
+            # If there are elements on left side of pivot,
+            # then push left side to stack
+            if p-1 > beg:
+                top = top + 1
+                stack[top] = beg
+                top = top + 1
+                stack[top] = p - 1
+        
+
+
+
     #  Applying Kruskal algorithm
     def run(self, graph):
         result = []
         i, e = 0, 0
-        graphSortedList = sorted(graph, key=lambda item: item[2])
-        graph._graph = graphSortedList
+        self.quicksort(graph, 0, len(graph._graph) - 1)
         parent = []
         rank = []
         for node in range(graph.V):
@@ -97,12 +161,16 @@ def createRandomGraph(nVertices, nEdges, maxWeight):
             newGraph.append([v, random.randrange(v)])
 
     # Make random connections until there is nEdges
-    maxNTries = 100
+    maxNTries = NUMBER_OF_TRIES
     nTries = 0
+    current_time = math.floor(time.time())
     while(len(newGraph) < nEdges): 
         u = random.randrange(nVertices)
         v = random.randrange(nVertices)
 
+        if current_time != math.floor(time.time()):  
+            current_time = math.floor(time.time())
+            print("Number of edges created: " + str(len(newGraph)))
         if u == v: 
             nTries += 1
             continue 
@@ -110,8 +178,11 @@ def createRandomGraph(nVertices, nEdges, maxWeight):
             nTries += 1
             continue
         if nTries >= maxNTries: 
-            return None # failed to create graph 
-
+            print("Failed to complete graph")
+            print("Number of tries to add a random edge: " + str(maxNTries))
+            break  # failed to create graph 
+        
+        nTries = 0
         newGraph.append([u, v])
 
     #creating Graph instance 
@@ -124,10 +195,16 @@ def createRandomGraph(nVertices, nEdges, maxWeight):
 
     return g
 
-g = createRandomGraph(5, 9, 10)
-createFileFromGraph("graph.data", g)
+if __name__ == "__main__":
+    for i in range(5): 
+        g = createRandomGraph(NUMBER_OF_VERTICES, NUMBER_OF_EDGES, MAX_WEIGHT)
 
-algo = Kruskal() 
-newG = algo.run(g)
+        createFileFromGraph("graph" + str(i) + ".data", g)
 
-createFileFromGraph("mst.data", newG)
+        if len(g._graph) < NUMBER_OF_EDGES: # The script failed to create the graph with NUMBER_OF_EDGES
+            exit()
+
+        algo = Kruskal() 
+        newG = algo.run(g)
+
+        createFileFromGraph("mst" + str(i) + ".data", newG)
