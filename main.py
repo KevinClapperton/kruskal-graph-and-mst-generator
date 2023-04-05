@@ -195,6 +195,15 @@ def createRandomGraph(nVertices, nEdges, maxWeight):
 
     return g
 
+def createGraphFromFile(name):
+    fp = open(name, 'r')
+    graph = Graph(500)
+    for line in fp:
+        edge = line.strip().replace("{", "").replace("}", "").split(',')
+        graph.add_edge([int(edge[0]), int(edge[1]), int(edge[2])])
+    fp.close()
+    return graph
+
 if __name__ == "__main__":
     for i in range(5): 
         g = createRandomGraph(NUMBER_OF_VERTICES, NUMBER_OF_EDGES, MAX_WEIGHT)
@@ -208,3 +217,9 @@ if __name__ == "__main__":
         newG = algo.run(g)
 
         createFileFromGraph("mst" + str(i) + ".data", newG)
+    # g = createGraphFromFile("US_largest500_airportnetwork.data")
+    # algo = Kruskal() 
+    # newG = algo.run(g)
+
+    # createFileFromGraph("US_largest500_airportnetwork_MST.data", newG)
+
